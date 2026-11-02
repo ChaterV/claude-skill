@@ -1,0 +1,59 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "summary", "steps", "changed_files", "test_files", "assumptions", "issues", "questions", "verification", "next_steps"],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["completed", "needs_input", "blocked", "failed"]
+    },
+    "summary": { "type": "string" },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "status", "note"],
+        "properties": {
+          "id": { "type": "string" },
+          "status": { "type": "string", "enum": ["done", "skipped", "deviated", "blocked", "pending"] },
+          "note": { "type": "string" }
+        }
+      }
+    },
+    "changed_files": { "type": "array", "items": { "type": "string" } },
+    "test_files": { "type": "array", "items": { "type": "string" } },
+    "assumptions": { "type": "array", "items": { "type": "string" } },
+    "issues": { "type": "array", "items": { "type": "string" } },
+    "questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "question", "options", "recommendation", "impact"],
+        "properties": {
+          "id": { "type": "string" },
+          "question": { "type": "string" },
+          "options": { "type": "array", "items": { "type": "string" } },
+          "recommendation": { "type": "string" },
+          "impact": { "type": "string" }
+        }
+      }
+    },
+    "verification": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["command", "purpose", "result", "detail"],
+        "properties": {
+          "command": { "type": "string" },
+          "purpose": { "type": "string" },
+          "result": { "type": "string", "enum": ["passed", "failed", "not_run"] },
+          "detail": { "type": "string" }
+        }
+      }
+    },
+    "next_steps": { "type": "array", "items": { "type": "string" } }
+  }
+}
