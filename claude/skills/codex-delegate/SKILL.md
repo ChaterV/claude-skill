@@ -1,13 +1,13 @@
 ---
 name: codex-delegate
-description: Claude 当大脑，Codex 当执行者：Claude 调研并制定具体计划，委托 OpenAI Codex CLI 按步骤执行（herdr 中开可见窗格，否则后台运行）；Codex 遇到计划外情况交回 Claude 决策，完成后 Claude 对照计划验收。目的是节省 Claude 的 token。当用户说"交给 codex""委托给 codex""让 codex 执行/实现/修""用 codex 当执行者/子 agent""delegate to codex"或输入 /codex-delegate 时使用。
+description: Claude 当大脑，Codex 当执行者：Claude 调研并制定具体计划，委托 OpenAI Codex CLI 按步骤执行（Codex 默认可见：herdr 中分屏，其它终端新开 tab 或窗口；只读任务后台运行）；Codex 遇到计划外情况交回 Claude 决策，完成后 Claude 对照计划验收。目的是节省 Claude 的 token。当用户说"交给 codex""委托给 codex""让 codex 执行/实现/修""用 codex 当执行者/子 agent""delegate to codex"或输入 /codex-delegate 时使用。
 ---
 
 # Codex 委托：Claude 决策，Codex 执行
 
 Claude 负责调研、写计划、回答决策问题、验收；Codex 负责按计划改代码、跑命令和测试、自行修复执行中的失败，不改计划、不做计划外改动。
 
-**token 原则**：Codex 执行期间，Claude 只在一轮结束、出现阻塞或异常时被唤醒（后台模式下还包括需要决策时；窗格模式的决策由用户直接在 Codex 窗格里做）。机械性工作全部交给 Codex。Codex 停下却没交结果时，脚本会自动催它继续，不唤醒 Claude。
+**token 原则**：Codex 执行期间，Claude 只在一轮结束、出现阻塞或异常时被唤醒（后台模式下还包括需要决策时；窗格和 tab 模式的决策由用户直接在 Codex 界面里做）。机械性工作全部交给 Codex。Codex 停下却没交结果时，后台和窗格模式的脚本会自动催它继续，不唤醒 Claude；tab 模式由用户在 tab 里让它继续。
 
 `SK=${CLAUDE_SKILL_DIR}`：本 skill 所在目录，下文和 references 文档中的 `$SK` 都替换成这个绝对路径。如果这里显示的不是绝对路径（旧版 Claude Code 不替换该变量），改用加载时提示的 Base directory。
 
@@ -33,15 +33,17 @@ Claude 负责调研、写计划、回答决策问题、验收；Codex 负责按�
 | 场景 | 参数 |
 |---|---|
 | 改代码（默认） | `--sandbox workspace-write`（可写工作目录，不能联网） |
-| 只读任务 | `--sandbox read-only`，只能用后台模式（窗格模式下 Codex 写不了结果文件） |
+| 只读任务 | `--sandbox read-only`，只能用后台模式（窗格和 tab 模式下 Codex 写不了结果文件） |
 | 需要装依赖、请求接口 | 再加 `--network` |
 | 不受沙箱限制 | `--sandbox danger-full-access`，必须先征得用户同意 |
 
 同一工作目录里不要同时跑两个会写文件的 Codex 任务；Codex 运行期间，Claude 不要改它负责的文件。
 
 模式只读对应的那一份文档并照做（第 2 步已和模板一起读过）：
-- `HERDR_ENV=1`（默认）→ 窗格模式：`$SK/references/pane.md`
-- 不在 herdr 中、只读任务，或用户要求后台运行 → 后台模式：`$SK/references/background.md`
+原则：**只要委托了 Codex，就让用户看到它**。
+- `HERDR_ENV=1` → 窗格模式（分屏）：`$SK/references/pane.md`
+- 不在 herdr 中 → tab 模式（当前终端新开 tab，开不了就用 macOS 自带终端开新窗口）：`$SK/references/tab.md`
+- 只读任务、用户要求后台运行，或 `tab.sh open` 返回 5（开不了可见窗口，例如 SSH）→ 后台模式：`$SK/references/background.md`。最后这种情况要告诉用户这次看不到 Codex 的界面
 
 始终通过脚本调用 Codex，不要绕过脚本直接执行 `codex exec`。
 
@@ -50,7 +52,7 @@ Claude 负责调研、写计划、回答决策问题、验收；Codex 负责按�
 完成通知里已带有结果摘要（状态、步骤、改动文件、验证结果、问题和假设），通常不需要再读结果文件。按 `status` 处理：
 
 - **completed** → 第 5 步验收。
-- **needs_input**（仅后台模式；窗格模式下 Codex 直接问用户，不会交回这个状态）→ Claude 自己判断：计划层面的问题（计划不可行、有更好的做法、需改计划外文件）根据调研结论决定；只有涉及用户意图、业务取舍或高风险操作时，才用 AskUserQuestion 问用户（选项来自 `options`，Codex 推荐的放第一个并标「(推荐)」）。然后写 reply，进入第 6 步。
+- **needs_input**（仅后台模式；窗格和 tab 模式下 Codex 直接问用户，不会交回这个状态）→ Claude 自己判断：计划层面的问题（计划不可行、有更好的做法、需改计划外文件）根据调研结论决定；只有涉及用户意图、业务取舍或高风险操作时，才用 AskUserQuestion 问用户（选项来自 `options`，Codex 推荐的放第一个并标「(推荐)」）。然后写 reply，进入第 6 步。
 - **blocked** → 多半是沙箱、网络或凭据问题，跟用户确认后调整权限。
 - **failed / 没有结构化结果** → 看摘要附带的原文，判断是发指令修正，还是调整计划后重新委托。
 

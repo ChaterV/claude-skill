@@ -32,7 +32,6 @@ shift 2
 mkdir -p "$run_dir" && run_dir="$(cd "$run_dir" && pwd)"
 META="$run_dir/meta.env"
 META_KEYS=(MODE PANE AGENT CWD SANDBOX NETWORK MODEL ROUND)
-WAIT_MARK='[等待用户决策]'
 
 load_meta() {
   [[ -f "$META" ]] || die "$META 不存在，请先 open"
@@ -48,24 +47,6 @@ pane_tail() {
   out="$(herdr agent read "$AGENT" --source visible 2>/dev/null || herdr pane read "$PANE" --source visible 2>/dev/null)" \
     || { echo "（无法读取窗格内容）"; return; }
   grep -v '^[[:space:]]*$' <<<"$out" | tail -n "${1:-30}"
-}
-
-# 本轮的结果交付说明（每轮都附上，避免模型遗忘写入的路径）
-delivery() {
-  printf '\n\n## 结果交付\n\n本轮结束时（包括停下来等待决策时）：\n'
-  printf '1. 把结果 JSON 对象写入文件 `%s`。整文件覆盖，文件中只能包含 JSON。\n' "$1"
-  printf '2. 写完后，界面中只回复一行：`[完成] status=<status>`。\n\n'
-  printf '结果 JSON 的 schema：\n\n```json\n%s\n```\n' "$(jq -c . "$SCHEMA")"
-}
-
-# 窗格模式的交互规则：决策问题直接问用户，不交回 Claude
-interaction() {
-  printf '\n\n## 窗格模式：决策直接问用户\n\n'
-  printf '本任务运行在用户可见的窗格中，用户能看到你的输出并直接回复你。以下规则优先于委托协议中的对应条款：\n'
-  printf -- '- 协议要求"停下询问"的情形（包括计划外情况、破坏性操作、简报「自主权」列出的情形），改为直接在界面里向用户提问：说明情况、可选方案和你的推荐。提问消息的最后一行单独输出 `%s`，然后结束本轮回复，等待用户回答。\n' "$WAIT_MARK"
-  printf -- '- 拿到用户回答后，按用户的决定继续执行，不要交付 `needs_input` 结果。\n'
-  printf -- '- 用户做出的每个决定，在最终结果的 `assumptions` 中记一条：`用户决策：<问题> → <决定>`。\n'
-  printf -- '- 只有 `[完成]` 之后才代表本轮结束；`[进度]` `[问题]` 之后仍然不要停。\n'
 }
 
 # Codex 是否在窗格里等待用户回答决策问题。不能只看标记在不在窗格末尾：用户回答后 Codex 可能只输出一条短消息就停下，

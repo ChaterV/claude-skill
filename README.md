@@ -13,7 +13,7 @@
 
 skill 列表：
 
-- `codex-delegate`：Claude 负责调研、制定计划和验收，Codex 负责执行。在 herdr 终端中会分屏运行可见的 Codex。
+- `codex-delegate`：Claude 负责调研、制定计划和验收，Codex 负责执行。Codex 默认可见：在 herdr 中分屏，在其它终端中新开 tab（开不了就用 macOS 自带终端开新窗口）；只读任务在后台运行。
 - `codex-review`：用户主动触发的 Codex 只读审查：代码改动（未提交改动 / 相对某分支 / 某个提交）或计划文件（对照代码核实可行性），可指定重点；Claude 核实每条意见后由用户决定修哪些。
 
 ## 新机器安装
@@ -60,5 +60,5 @@ Claude Code（例如 `/config`、`/model`、安装插件）和 herdr（安装集
 - herdr 的 SessionStart hook 只在 `~/.claude/hooks/herdr-agent-state.sh` 存在时才运行，没装 herdr 的机器会直接跳过。
 - 重新运行 `herdr integration install claude` 时，herdr 可能把 hook 命令改回绝对路径，还可能把 `settings.json` 的软链接替换成普通文件。之后用 `./install.sh --check` 检查；如果出现「已分叉」，用 `--adopt` 收回，再把路径改回 `~`。
 - 插件（`claude-seo`）的市场信息在 `settings.json` 里，新机器首次启动后，可能需要用 `/plugin` 安装或启用。
-- `codex-delegate` 依赖 `codex` CLI（已登录）、`jq`，窗格模式还需要 `herdr`。
+- `codex-delegate` 依赖 `codex` CLI（已登录）、`jq`；分屏需要 `herdr`，没有的话改为新开 tab 或窗口。
 - `codex-review` 依赖 `codex` CLI（已登录，需支持 `codex exec review`）、`jq`。

@@ -82,7 +82,7 @@ missing="$(
   dep jq    "缺少 jq（必需）：状态栏、codex-delegate、codex-review 都依赖它。macOS: brew install jq；Debian/Ubuntu: apt install jq"
   dep git   "缺少 git（必需）：状态栏分支显示和 codex-review 依赖它"
   dep codex "未安装 codex CLI：codex-delegate、codex-review 不可用。安装：npm i -g @openai/codex，然后运行 codex login"
-  dep herdr "未安装 herdr（可选）：codex-delegate 会自动改用后台模式"
+  dep herdr "未安装 herdr（可选）：codex-delegate 会改为新开 tab 或窗口显示 Codex"
 )"
 [[ -z "$missing" ]] || { echo "依赖："; echo "$missing"; }
 
