@@ -134,9 +134,12 @@ if result_valid "$run_dir/result.json"; then
   result_summary "$run_dir/result.json"
 else
   echo "status: 无结构化结果（可能被中断、出错或输出不符合 schema）"
-  if [[ -s "$run_dir/result.json" || -s "$run_dir/result.raw.txt" ]]; then
+  raw="$run_dir/result.json"; [[ -s "$raw" ]] || raw="$run_dir/result.raw.txt"
+  if [[ -s "$raw" ]]; then
     echo "  最后一条消息原文（请自行解读 status / questions）:"
-    cat "$run_dir/result.json" 2>/dev/null || cat "$run_dir/result.raw.txt"; echo
+    # 限长，避免超长原文整段进入 Claude 的上下文
+    head -c 3000 "$raw"; echo
+    (( $(wc -c < "$raw") > 3000 )) && echo "  …（已截断，完整内容见 $raw）"
   fi
   jq -r 'select(.type=="turn.failed" or .type=="error") | "  事件: \(.error.message // .message // tostring)"' "$run_dir/events.jsonl" 2>/dev/null | tail -n 5
   echo "  stderr 末尾:"; grep -v 'rmcp::transport' "$run_dir/stderr.log" 2>/dev/null | tail -n 5 | sed 's/^/    /'
