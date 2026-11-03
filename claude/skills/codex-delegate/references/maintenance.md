@@ -13,3 +13,4 @@
 - tab 模式的会话 ID 从 `${CODEX_HOME:-~/.codex}/sessions/**/rollout-*.jsonl` 中查找：比 `.started` 新、且内容包含本任务 `prompt-1.md` 绝对路径的文件，第一行 `session_meta` 的 `payload.id`。Codex 改了会话记录的位置或格式后要重新验证。
 - tab 模式各终端的打开方式见 `tab.sh` 的 `open_with`。Ghostty 用的是 1.4 的 AppleScript（`new tab ... with configuration {command:...}`）；iTerm2、WezTerm、kitty、tmux 的写法还没有实测过。
 - tab 模式启动 Codex 时用的是 open 时记下的 `CODEX_BIN` 和 `PATH`（存在 meta.env 里），因为 Ghostty、iTerm2 直接执行命令时不加载用户的 shell 配置。
+- 修正轮数计数在 `lib.sh` 的 `count_fix_rounds`，记在 `<run_dir>/fix-rounds.tsv`，三个脚本都在发送答复之前调用。上限可用 `CODEX_DELEGATE_MAX_FIX_ROUNDS` 调整。解析「修正:」行时，中文标点用交替 `(，|、|,)` 而不是方括号：BSD sed 在 C locale 下会把方括号里的多字节字符拆成单个字节，弄坏中文标识。

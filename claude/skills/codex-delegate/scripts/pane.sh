@@ -12,7 +12,7 @@
 #   pane.sh close <run_dir>
 #       关闭本任务创建的窗格
 #
-# 退出码: 0 本轮有结果 | 3 open 时 Codex 等待启动确认 | 4 本轮结束但没有拿到结果 | 2 用法或环境错误
+# 退出码: 0 本轮有结果 | 3 open 时 Codex 等待启动确认 | 4 本轮结束但没有拿到结果 | 6 修正轮数超限，未发送 | 2 用法或环境错误
 # 审批和决策提问都由用户直接在窗格中处理，run/wait 不会因此返回，只等本轮真正结束。
 set -uo pipefail
 
@@ -168,6 +168,10 @@ case "$cmd" in
   run)
     load_meta
     reply_file="${1:-}"
+    if [[ -n "$reply_file" ]]; then
+      [[ -f "$reply_file" ]] || die "答复文件不存在: $reply_file"
+      count_fix_rounds "$run_dir" "$reply_file"
+    fi
     ROUND=$((ROUND + 1))
     result="$run_dir/result-$ROUND.json"
     msg="$run_dir/prompt-$ROUND.md"

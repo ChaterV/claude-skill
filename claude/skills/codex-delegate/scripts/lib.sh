@@ -24,6 +24,41 @@ continue_msg() {
   printf '%s' "你停下了，但还没有交付本轮结果。不要等待回复：如果执行计划还有未完成的步骤，并且没有遇到协议规定必须停下询问的情况，请直接继续执行剩余步骤。全部完成，或者遇到必须停下的情况时，再交付结果：$1"
 }
 
+# 同一个问题最多修正几轮。超过后脚本拒绝发送，交给用户决定
+MAX_FIX_ROUNDS="${CODEX_DELEGATE_MAX_FIX_ROUNDS:-2}"
+
+# 按答复里的「修正: A, B」行统计每个问题的修正轮数，记在 <run_dir>/fix-rounds.tsv（问题标识<TAB>轮数）。
+# 某个问题已经修正满 MAX_FIX_ROUNDS 轮时，打印说明并以退出码 6 结束，不发送；
+# 用户明确同意继续修时，设置 CODEX_DELEGATE_ALLOW_MORE_FIXES=1 跳过拦截（仍然计数）。
+# 分隔符用交替而不用方括号：BSD sed 在 C locale 下会把方括号里的中文标点拆成单个字节。
+count_fix_rounds() {
+  local run_dir="$1" reply="$2" f="$1/fix-rounds.tsv" ids id n blocked=""
+  ids="$(grep -m 1 -E '^[[:space:]]*修正(:|：)' "$reply" \
+         | sed -E 's/^[[:space:]]*修正(:|：)//; s/(，|、|,)/ /g' | tr -s ' \t' '\n' | grep -v '^$' | sort -u)"
+  if [[ -z "$ids" ]]; then
+    echo "（这次答复没有「修正:」行，不计入修正轮数）"
+    return 0
+  fi
+  touch "$f"
+  while IFS= read -r id; do
+    n="$(awk -F'\t' -v k="$id" '$1 == k { print $2 }' "$f")"
+    (( ${n:-0} >= MAX_FIX_ROUNDS )) && blocked+="  - ${id}：已修正 ${n} 轮"$'\n'
+  done <<<"$ids"
+  if [[ -n "$blocked" && "${CODEX_DELEGATE_ALLOW_MORE_FIXES:-}" != 1 ]]; then
+    echo "[已拦截] 以下问题已修正 ${MAX_FIX_ROUNDS} 轮仍未解决，这一轮没有发送："
+    printf '%s' "$blocked"
+    echo "请停下来问用户。用户明确同意继续让 Codex 修时，在同一条命令前加 CODEX_DELEGATE_ALLOW_MORE_FIXES=1 重新执行。"
+    exit 6
+  fi
+  IDS="$ids" awk -F'\t' -v OFS='\t' '
+    BEGIN { n = split(ENVIRON["IDS"], a, "\n"); for (i = 1; i <= n; i++) if (a[i] != "") want[a[i]] = 1 }
+    { if ($1 in want) { $2++; delete want[$1] } print }
+    END { for (k in want) print k, 1 }' "$f" > "$f.tmp" && mv -f "$f.tmp" "$f"
+  printf '修正轮数：'
+  while IFS= read -r id; do printf '%s=%s ' "$id" "$(awk -F'\t' -v k="$id" '$1 == k { print $2 }' "$f")"; done <<<"$ids"
+  echo "（上限 ${MAX_FIX_ROUNDS} 轮）"
+}
+
 # 结果文件是否为合法的结果对象
 result_valid() { jq -e 'type=="object" and has("status") and has("summary")' "$1" >/dev/null 2>&1; }
 

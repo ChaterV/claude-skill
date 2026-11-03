@@ -39,6 +39,7 @@ if [[ "$cmd" == resume ]]; then
   [[ -f "$META" ]] || die "$META 不存在，请先 start"
   reply_file="${1:-}"; [[ -f "$reply_file" ]] || die "答复文件不存在: $reply_file"
   shift
+  count_fix_rounds "$run_dir" "$reply_file"
   # shellcheck disable=SC1090
   source "$META"
 else

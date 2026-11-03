@@ -17,7 +17,7 @@
 #   tab.sh close <run_dir>
 #       结束 Codex 和 tab 里的 tab-runner.sh（tab 本身由用户关闭）
 #
-# 退出码: 0 本轮有结果 | 4 Codex 退出或 tab 被关闭，本轮没有结果 | 5 无法打开可见的 tab 或窗口（改用后台模式） | 2 用法或环境错误
+# 退出码: 0 本轮有结果 | 4 Codex 退出或 tab 被关闭，本轮没有结果 | 5 无法打开可见的 tab 或窗口（改用后台模式） | 6 修正轮数超限，未发送 | 2 用法或环境错误
 set -uo pipefail
 
 SKILL_DIR="$(cd "$(dirname "$0")/.." && pwd)"
@@ -270,6 +270,7 @@ case "$cmd" in
       SID="$(find_sid)"
       [[ -n "$SID" ]] || die "在 ${CODEX_HOME:-$HOME/.codex}/sessions 中找不到本任务的 Codex 会话，无法续跑"
     fi
+    count_fix_rounds "$run_dir" "$reply_file"
     ROUND=$((ROUND + 1))
     write_prompt "$reply_file"
     stop_codex
