@@ -1,7 +1,28 @@
 {
   "env": {},
-  "model": "opus",
+  "model": "fable",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "^(startup|resume|clear|compact|fork)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ ! -f ~/.claude/hooks/herdr-agent-state.sh ] || bash ~/.claude/hooks/herdr-agent-state.sh session",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  },
   "enableWorkflows": true,
+  "statusLine": {
+    "type": "command",
+    "command": "bash \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/statusline.sh\""
+  },
+  "enabledPlugins": {
+    "claude-seo@agricidaniel-claude-seo": true
+  },
   "extraKnownMarketplaces": {
     "agricidaniel-claude-seo": {
       "source": {
@@ -17,15 +38,10 @@
     },
     "claude-sonnet-5-5": {
       "effortLevel": "high"
+    },
+    "claude-fable-5-2": {
+      "effortLevel": "high"
     }
   },
-  "theme": "dark",
-  "statusLine": {
-    "type": "command",
-    "command": "bash \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/statusline.sh\""
-  },
-  "enabledPlugins": {
-    "claude-seo@agricidaniel-claude-seo": true
-  },
-  "hooks": {"SessionStart":[{"matcher":"^(startup|resume|clear|compact|fork)$","hooks":[{"type":"command","command":"[ ! -f ~/.claude/hooks/herdr-agent-state.sh ] || bash ~/.claude/hooks/herdr-agent-state.sh session","timeout":10}]}]}
+  "theme": "dark"
 }
