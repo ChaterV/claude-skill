@@ -1,6 +1,6 @@
 {
   "env": {},
-  "model": "fable",
+  "model": "opus",
   "hooks": {
     "SessionStart": [
       {
