@@ -7,8 +7,7 @@
 | 仓库路径 | 链接到 | 说明 |
 |---|---|---|
 | `claude/CLAUDE.md` | `~/.claude/CLAUDE.md` | 全局指令 |
-| `claude/settings.json` | `~/.claude/settings.json` | 模型、思考强度、插件、状态栏、hooks |
-| `claude/statusline.sh` | `~/.claude/statusline.sh` | 状态栏脚本 |
+| `claude/settings.json` | `~/.claude/settings.json` | 模型、思考强度、插件、hooks |
 | `claude/skills/<name>/` | `~/.claude/skills/<name>` | 自定义 skill；`claude/skills/` 下每个目录都会被链接 |
 
 skill 列表：

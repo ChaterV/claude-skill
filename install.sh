@@ -7,7 +7,7 @@
 #   ./install.sh --adopt    以本地版本为准：把本地被改动过的文件收回仓库，再重建软链接
 #                           （用于 Claude Code / herdr 改写 settings.json 时把软链接替换成了普通文件的情况）
 #
-# 受管理的条目：claude/ 下的 CLAUDE.md、settings.json、statusline.sh，以及 claude/skills/ 下的每个 skill 目录。
+# 受管理的条目：claude/ 下的 CLAUDE.md、settings.json，以及 claude/skills/ 下的每个 skill 目录。
 set -euo pipefail
 
 REPO="$(cd "$(dirname "$0")" && pwd)"
@@ -24,7 +24,7 @@ case "${1:-}" in
 esac
 
 items=()
-for f in CLAUDE.md settings.json statusline.sh; do [[ -e "$SRC/$f" ]] && items+=("$f"); done
+for f in CLAUDE.md settings.json; do [[ -e "$SRC/$f" ]] && items+=("$f"); done
 for d in "$SRC"/skills/*/; do [[ -d "$d" ]] && items+=("skills/$(basename "$d")"); done
 
 backup_dir="$DEST/backups/claude-skill-$(date +%Y%m%d-%H%M%S)"
@@ -79,8 +79,8 @@ fi
 # 依赖检查：只提示，不影响安装
 dep() { command -v "$1" >/dev/null 2>&1 || echo "  $2"; }
 missing="$(
-  dep jq    "缺少 jq（必需）：状态栏、codex-delegate、codex-review 都依赖它。macOS: brew install jq；Debian/Ubuntu: apt install jq"
-  dep git   "缺少 git（必需）：状态栏分支显示和 codex-review 依赖它"
+  dep jq    "缺少 jq（必需）：codex-delegate、codex-review 都依赖它。macOS: brew install jq；Debian/Ubuntu: apt install jq"
+  dep git   "缺少 git（必需）：codex-review 依赖它"
   dep codex "未安装 codex CLI：codex-delegate、codex-review 不可用。安装：npm i -g @openai/codex，然后运行 codex login"
   dep herdr "未安装 herdr（可选）：codex-delegate 会改为新开 tab 或窗口显示 Codex"
 )"
